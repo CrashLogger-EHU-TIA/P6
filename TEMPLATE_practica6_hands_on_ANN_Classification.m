@@ -3,12 +3,14 @@ function TEMPLATE_practica6_hands_on_ANN_Classification
 % (RNA para clasificación) de la asignatura 'Técnicas de Inteligencia Artificial'
 
 % cargamos base de datos
-
+load Carseats.mat
+dim = size(Carseats)
 
 disp('%%%%%%%%%%%%%%% REDES NEURONALES ARTIFICIALES %%%%%%%%%%%%%%%%%');
 disp('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%');
 
 % Creamos variable dicotómica High en base a la variable Sales
+% High = High sales (>8000 sales)
 High = zeros(dim(1),1);
 High(Carseats.Sales>8) = 1;
 Y = High;
@@ -26,35 +28,49 @@ US_Y = D(:,1);
 X = [Carseats{:,2:6} ShelveLoc_med ShelveLoc_good Carseats{:,8:9} Urban_Y US_Y];
 
 
-
 % Inicializamos red con 20 neuronas en la capa oculta
+%% INSTALAR TOOLBOX DEEP LEARNING!
+net = patternnet(20);
 
 % Dividir datos en train/validation/test
 rng(1);
+[trainInd, valInd, testInd] = divideind(length(Y), 0.7, 0.15, 0.15)
 
 % sigmoide como función de transferencia
+keyboard
 
+% Cambiamos la tangente hiperbólica por la sigmoide en la capa de neuronas oculta
+net.layers{1}.transferFcn = 'logsig'
 
 % fijar función usada para división de datos
-
+net.divideFcn = 'divideind'
 
 % fijar posiciones de datos train/validation/test
-
+net.divideParam.trainInd = trainInd
+net.divideParam.valInd = valInd
+net.divideParam.testInd = testInd
 
 % estandarizar predictores a media 0 y std 1
+net.inputs{1}.processFcns{2}='mapstd'
 
-    
 % Train ANN
-
+train_net = train(net, X', Y');
 
 % Test FNN 
+th = 0.5;
+ypred = train_net(X(testInd,:)');
+yfit = ypred;
 
-
+yfit(ypred>th)=1;
+yfit(ypred<=th)=0;
 
 % Calcular y visualizar tasa de acierto
-
+acierto = 100*sum(yfit == Y(testInd)')/length(Y(testInd));
+% Debería dar 
 fprintf('Tasa de predicciones correctas (TEST) = %4.2f%% \n\n',acierto);
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% HASTA AQUI HEMOS LLEGADO
 
 % CALCULAR NÚMERO ÓPTIMO DE NEURONAS EN LA CAPA OCULTA
 % Usar 5-fold CV en los datos de entrenamiento para elegir ALPHA

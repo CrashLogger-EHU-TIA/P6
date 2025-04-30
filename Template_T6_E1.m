@@ -15,6 +15,17 @@ clear all;
 close all;
 clc;
 
+% Start parallel pool if not already running
+if isempty(gcp('nocreate'))
+    parpool; % Uses default number of workers (usually equal to physical cores)
+end
+
+if canUseParallelPool
+    disp("Parallel Computing Toolbox is installed")
+else
+    disp("Parallel Computing Toolbox is not installed")
+end
+
 % Cargamos base de datos
 load Carseats.mat;
 
@@ -164,7 +175,7 @@ k = 10;
 m = linspace(1,size(X1,2),size(X1,2));
 
 clear("CV_MSE");
-CV_MSE=[];
+CV_MSE=zeros(1,length(m));
 for aa = 1:k
     pos_train_iter = c.training(aa);
     pos_test_iter = c.test(aa);
